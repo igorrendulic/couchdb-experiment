@@ -1,0 +1,269 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a basic server example using go-web3-kit",
+        "title": "Web3 Go Kit basic server",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/pong": {
+            "get": {
+                "description": "Returns all available virtual machien types and their resource capacities",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "PONG API"
+                ],
+                "summary": "Returns pong message",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Pingpong"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/email": {
+            "get": {
+                "description": "get emails",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Emails"
+                ],
+                "summary": "get emails",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "username",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "folder",
+                        "name": "folder",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "default = 20",
+                        "name": "limit",
+                        "in": "path"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Email"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "can't login (no partner association)",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    },
+                    "401": {
+                        "description": "login failed",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Nwe email received (eithe rSMTP or mailio)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Emails"
+                ],
+                "summary": "New email received",
+                "parameters": [
+                    {
+                        "description": "receiving email",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Email"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Email"
+                        }
+                    },
+                    "400": {
+                        "description": "can't login (no partner association)",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    },
+                    "401": {
+                        "description": "login failed",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/register": {
+            "post": {
+                "description": "Regiter user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Login and Registration"
+                ],
+                "summary": "REgister user",
+                "parameters": [
+                    {
+                        "description": "Name and Password required",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.RegisterInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "400": {
+                        "description": "can't login (no partner association)",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    },
+                    "401": {
+                        "description": "login failed",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    },
+                    "403": {
+                        "description": "login forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/gingonic.JSONError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "gingonic.JSONError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Email": {
+            "type": "object",
+            "required": [
+                "body",
+                "folder",
+                "username"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "created": {
+                    "type": "integer"
+                },
+                "folder": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Pingpong": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.RegisterInput": {
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

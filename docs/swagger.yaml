@@ -1,0 +1,178 @@
+definitions:
+  gingonic.JSONError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  models.Email:
+    properties:
+      body:
+        type: string
+      created:
+        type: integer
+      folder:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      username:
+        type: string
+    required:
+    - body
+    - folder
+    - username
+    type: object
+  models.Pingpong:
+    properties:
+      message:
+        type: string
+    type: object
+  models.RegisterInput:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is a basic server example using go-web3-kit
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Web3 Go Kit basic server
+  version: "1.0"
+paths:
+  /api/pong:
+    get:
+      consumes:
+      - application/json
+      description: Returns all available virtual machien types and their resource
+        capacities
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Pingpong'
+      summary: Returns pong message
+      tags:
+      - PONG API
+  /api/v1/email:
+    get:
+      consumes:
+      - application/json
+      description: get emails
+      parameters:
+      - description: username
+        in: path
+        name: username
+        required: true
+        type: string
+      - description: folder
+        in: path
+        name: folder
+        required: true
+        type: string
+      - description: default = 20
+        in: path
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Email'
+            type: array
+        "400":
+          description: can't login (no partner association)
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+        "401":
+          description: login failed
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+      summary: get emails
+      tags:
+      - Emails
+    post:
+      consumes:
+      - application/json
+      description: Nwe email received (eithe rSMTP or mailio)
+      parameters:
+      - description: receiving email
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.Email'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Email'
+        "400":
+          description: can't login (no partner association)
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+        "401":
+          description: login failed
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+      summary: New email received
+      tags:
+      - Emails
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: Regiter user
+      parameters:
+      - description: Name and Password required
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: can't login (no partner association)
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+        "401":
+          description: login failed
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+        "403":
+          description: login forbidden
+          schema:
+            $ref: '#/definitions/gingonic.JSONError'
+      summary: REgister user
+      tags:
+      - Login and Registration
+swagger: "2.0"
