@@ -67,6 +67,7 @@ func main() {
 		root.GET("/pong", api.PingPongAPI)
 		root.POST("/v1/register", api.NewUserAPI(couchDBService).RegisterUser)
 		root.POST("/v1/email", api.NewEmailAPI(couchDBService).AddEmail)
+		root.POST("/smtp", api.NewApiSmtp().SmtpWebhook)
 		// root.GET("/v1/email", api.NewEmailAPI(couchDBService).ListEmails)
 	}
 

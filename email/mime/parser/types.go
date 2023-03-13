@@ -32,6 +32,7 @@ type Mail struct {
 	HeadersTruncated bool               `json:"headersTruncated"`
 	Headers          []*HeaderAttribute `json:"headers"`
 	CommonHeaders    *CommonHeader      `json:"commonHeaders"`
+	RawMime          []byte             `json:"rawMime,omitempty"`
 }
 
 // Receipt is a receipt of a message
@@ -74,7 +75,7 @@ type Complaint struct {
 	ComplaintFeedbackType string                 `json:"complaintFeedbackType,omitempty"` // e.g. abuse
 }
 
-// optional field, only present if the message was delivered
+// optional field, only present if the message was delivered (not necessary to use really)
 type Delivery struct {
 	Timestamp            int64  `json:"timestamp"`            // miliseconds since epoch
 	ProcessingTimeMillis int    `json:"processingTimeMillis"` // miliseconds

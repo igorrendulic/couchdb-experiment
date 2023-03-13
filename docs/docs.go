@@ -42,9 +42,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/email": {
-            "get": {
-                "description": "get emails",
+        "/api/smtp": {
+            "post": {
+                "description": "Receive webhook - entry point for all incoming emails",
                 "consumes": [
                     "application/json"
                 ],
@@ -54,37 +54,23 @@ const docTemplate = `{
                 "tags": [
                     "Emails"
                 ],
-                "summary": "get emails",
+                "summary": "Smtp Receive webhook",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "username",
-                        "name": "username",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "folder",
-                        "name": "folder",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "default = 20",
-                        "name": "limit",
-                        "in": "path"
+                        "description": "receiving email",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/sns.Payload"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Email"
-                            }
+                            "$ref": "#/definitions/parser.MailReceived"
                         }
                     },
                     "400": {
@@ -100,7 +86,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/v1/email": {
             "post": {
                 "description": "Nwe email received (eithe rSMTP or mailio)",
                 "consumes": [
@@ -269,6 +257,341 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.Action": {
+            "type": "object",
+            "properties": {
+                "objectUrl": {
+                    "description": "original source of the message (ipfs/s3,...)",
+                    "type": "string"
+                },
+                "topic": {
+                    "description": "topic ()",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "type of action",
+                    "type": "string"
+                }
+            }
+        },
+        "parser.Bounce": {
+            "type": "object",
+            "properties": {
+                "bounceSubType": {
+                    "description": "e.g. General",
+                    "type": "string"
+                },
+                "bounceType": {
+                    "description": "e.g. Permament",
+                    "type": "string"
+                },
+                "bouncedRecipients": {
+                    "description": "e.g. {\"emailAddress\":\"jane@example.com\",\"status\":\"5.1.1\",\"action\":\"failed\",\"diagnosticCode\":\"smtp; 550 5.1.1 \u003cjane@example.com\u003e... User\"}",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parser.BouncedRecipient"
+                    }
+                },
+                "remoteMtaIp": {
+                    "description": "e.g. 127.0.0.1\" The IP address of the MTA to which Amazon SES attempted to deliver the email.",
+                    "type": "string"
+                },
+                "reportingMTA": {
+                    "description": "e.g. \"dns; email.example.com\", The value of the Reporting-MTA field from the DSN. This is the value of the MTA that attempted to perform the delivery, relay, or gateway operation described in the DSN.",
+                    "type": "string"
+                }
+            }
+        },
+        "parser.BouncedRecipient": {
+            "type": "object",
+            "required": [
+                "action",
+                "emailAddress"
+            ],
+            "properties": {
+                "action": {
+                    "description": "failed",
+                    "type": "string"
+                },
+                "diagnosticCode": {
+                    "type": "string"
+                },
+                "emailAddress": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.CommonHeader": {
+            "type": "object",
+            "properties": {
+                "from": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "messageId": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "epoch time in miliseconds",
+                    "type": "integer"
+                },
+                "to": {
+                    "description": "list of recipients (e.g. [\"Jane Doe \u003cjane@example.com\u003e, Mary Doe \u003cmary@example.com\u003e, Richard Doe \u003crichard@example.com\u003e\"])",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "parser.ComplainedRecipient": {
+            "type": "object",
+            "required": [
+                "emailAddress"
+            ],
+            "properties": {
+                "emailAddress": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.Complaint": {
+            "type": "object",
+            "properties": {
+                "complainedRecipients": {
+                    "description": "e.g. [{\"emailAddress\":\"",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parser.ComplainedRecipient"
+                    }
+                },
+                "complaintFeedbackType": {
+                    "description": "e.g. abuse",
+                    "type": "string"
+                },
+                "userAgent": {
+                    "description": "e.g. AnyCompany Feedback Loop (V0.01)",
+                    "type": "string"
+                }
+            }
+        },
+        "parser.Delivery": {
+            "type": "object",
+            "properties": {
+                "processingTimeMillis": {
+                    "description": "miliseconds",
+                    "type": "integer"
+                },
+                "remoteMtaIp": {
+                    "description": "e.g. 127.0.2.0",
+                    "type": "string"
+                },
+                "reportingMTA": {
+                    "description": "e.g. a8-70.smtp-out.mail.io",
+                    "type": "string"
+                },
+                "smtpResponse": {
+                    "description": "e.g. 250 ok:  Message 111 accepted",
+                    "type": "string"
+                },
+                "timestamp": {
+                    "description": "miliseconds since epoch",
+                    "type": "integer"
+                }
+            }
+        },
+        "parser.HeaderAttribute": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.Mail": {
+            "type": "object",
+            "properties": {
+                "commonHeaders": {
+                    "$ref": "#/definitions/parser.CommonHeader"
+                },
+                "destination": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "headers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/parser.HeaderAttribute"
+                    }
+                },
+                "headersTruncated": {
+                    "type": "boolean"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "parser.MailReceived": {
+            "type": "object",
+            "required": [
+                "notificationType"
+            ],
+            "properties": {
+                "bounce": {
+                    "$ref": "#/definitions/parser.Bounce"
+                },
+                "complaint": {
+                    "$ref": "#/definitions/parser.Complaint"
+                },
+                "delivery": {
+                    "$ref": "#/definitions/parser.Delivery"
+                },
+                "mail": {
+                    "$ref": "#/definitions/parser.Mail"
+                },
+                "notificationType": {
+                    "description": "possible values: Bounce, Complaint or Delivery",
+                    "type": "string"
+                },
+                "receipt": {
+                    "$ref": "#/definitions/parser.Receipt"
+                },
+                "timestamp": {
+                    "description": "since epoch in miliseconds",
+                    "type": "integer"
+                }
+            }
+        },
+        "parser.Receipt": {
+            "type": "object",
+            "required": [
+                "recipients"
+            ],
+            "properties": {
+                "action": {
+                    "description": "optional, action",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.Action"
+                        }
+                    ]
+                },
+                "dkimVerdict": {
+                    "description": "optional, dkim verdict",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.VerdictStatus"
+                        }
+                    ]
+                },
+                "dmarcVerdict": {
+                    "description": "optional, dmarc verdict",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.VerdictStatus"
+                        }
+                    ]
+                },
+                "processingTimeMillis": {
+                    "description": "optional field, only present if the message was processed",
+                    "type": "integer"
+                },
+                "recipients": {
+                    "description": "list of recipients",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "spamVerdict": {
+                    "description": "optional, spam verdict",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.VerdictStatus"
+                        }
+                    ]
+                },
+                "spfVerdict": {
+                    "description": "optinal, spf verdict",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.VerdictStatus"
+                        }
+                    ]
+                },
+                "virusVerdict": {
+                    "description": "optional, virus verdict",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/parser.VerdictStatus"
+                        }
+                    ]
+                }
+            }
+        },
+        "parser.VerdictStatus": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "sns.Payload": {
+            "type": "object",
+            "properties": {
+                "Message": {
+                    "type": "string"
+                },
+                "MessageId": {
+                    "type": "string"
+                },
+                "Signature": {
+                    "type": "string"
+                },
+                "SignatureVersion": {
+                    "type": "string"
+                },
+                "SigningCertURL": {
+                    "type": "string"
+                },
+                "Subject": {
+                    "type": "string"
+                },
+                "SubscribeURL": {
+                    "type": "string"
+                },
+                "Timestamp": {
+                    "type": "string"
+                },
+                "Token": {
+                    "type": "string"
+                },
+                "TopicArn": {
+                    "type": "string"
+                },
+                "Type": {
+                    "type": "string"
+                },
+                "UnsubscribeURL": {
                     "type": "string"
                 }
             }
