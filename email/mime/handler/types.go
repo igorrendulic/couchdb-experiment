@@ -1,4 +1,4 @@
-package parser
+package handler
 
 // VerdictStatus (e.g. )
 type VerdictStatus struct {

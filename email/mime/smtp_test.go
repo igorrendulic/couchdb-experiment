@@ -3,32 +3,32 @@ package mime
 import (
 	"testing"
 
-	"github.com/igorrendulic/couchdb-experiment/email/mime/parser"
+	"github.com/igorrendulic/couchdb-experiment/email/mime/handler"
 )
 
-type fakeParser struct{}
+type fakeHandler struct{}
 
-func (p *fakeParser) Parse([]byte) (*parser.MailReceived, error) {
-	return &parser.MailReceived{
+func (p *fakeHandler) HandleSmtp([]byte) (*handler.MailReceived, error) {
+	return &handler.MailReceived{
 		NotificationType: "fake",
 	}, nil
 }
 
-func TestRegisterParser(t *testing.T) {
-	Register("fake1", &fakeParser{})
-	if len(Parsers()) != 1 {
-		t.Error("expected 1 parser, got", len(Parsers()))
+func TestRegisterSmtpHandler(t *testing.T) {
+	Register("fake1", &fakeHandler{})
+	if len(SmtpHandlers()) != 1 {
+		t.Error("expected 1 parser, got", len(SmtpHandlers()))
 	}
 }
 
-func TestCallParser(t *testing.T) {
-	fp := &fakeParser{}
+func TestCalSmtpHandler(t *testing.T) {
+	fp := &fakeHandler{}
 	Register("fake2", fp)
-	p, err := GetParser("fake2")
+	p, err := GetSmtpHandler("fake2")
 	if err != nil {
 		t.Error("expected no error, got", err)
 	}
-	em, emErr := p.Parse([]byte("fake"))
+	em, emErr := p.HandleSmtp([]byte("fake"))
 	if emErr != nil {
 		t.Error("expected no error, got", emErr)
 	}
@@ -37,19 +37,19 @@ func TestCallParser(t *testing.T) {
 	}
 }
 
-func TestParserNotRegistered(t *testing.T) {
-	fp := &fakeParser{}
+func TestSmtpHandlerNotRegistered(t *testing.T) {
+	fp := &fakeHandler{}
 	Register("fake3", fp)
-	_, err := GetParser("fake41")
+	_, err := GetSmtpHandler("fake41")
 	if err == nil {
 		t.Error("expected error, got fake41")
 	}
 }
 
-func TestListParsers(t *testing.T) {
-	fp := &fakeParser{}
+func TestListSmtpHandlers(t *testing.T) {
+	fp := &fakeHandler{}
 	Register("fake4", fp)
-	all := Parsers()
+	all := SmtpHandlers()
 	found := false
 	for a := range all {
 		if all[a] == "fake4" {
@@ -61,11 +61,11 @@ func TestListParsers(t *testing.T) {
 	}
 }
 
-func TestUnregisterAllParsers(t *testing.T) {
-	fp := &fakeParser{}
+func TestUnregisterAllSmtpHandlers(t *testing.T) {
+	fp := &fakeHandler{}
 	Register("fake5", fp)
-	unregisterAllParsers()
-	if len(Parsers()) != 0 {
-		t.Error("expected 0 parsers, got", len(Parsers()))
+	unregisterAllSmtpHandlers()
+	if len(SmtpHandlers()) != 0 {
+		t.Error("expected 0 handlers, got", len(SmtpHandlers()))
 	}
 }
