@@ -12,12 +12,7 @@ type Action struct {
 	ObjectURL string `json:"objectUrl,omitempty"` // original source of the message (ipfs/s3,...)
 }
 
-type HeaderAttribute struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-type CommonHeader struct {
+type CommonHeaders struct {
 	From      []string `json:"from"`
 	Timestamp int64    `json:"timestamp"` // epoch time in miliseconds
 	To        []string `json:"to"`        // list of recipients (e.g. ["Jane Doe <jane@example.com>, Mary Doe <mary@example.com>, Richard Doe <richard@example.com>"])
@@ -27,12 +22,11 @@ type CommonHeader struct {
 
 // Mail is a mail
 type Mail struct {
-	Source           string             `json:"source"`
-	Destination      []string           `json:"destination"`
-	HeadersTruncated bool               `json:"headersTruncated"`
-	Headers          []*HeaderAttribute `json:"headers"`
-	CommonHeaders    *CommonHeader      `json:"commonHeaders"`
-	RawMime          []byte             `json:"rawMime,omitempty"`
+	Source        string         `json:"source"`                  // sender
+	Destination   []string       `json:"destination"`             // list of recipients
+	CommonHeaders *CommonHeaders `json:"commonHeaders,omitempty"` // optional (if webhook provides it, otherwise parse from RawMime)
+	MessageID     string         `json:"messageId,omitempty"`     // optional, unique id of the message (if webhook parses it, otherwise parse from RawMime)
+	RawMime       []byte         `json:"rawMime,omitempty"`       // optional, raw mime messages
 }
 
 // Receipt is a receipt of a message

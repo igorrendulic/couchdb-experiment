@@ -8,8 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	awssmtphandler "github.com/igorrendulic/couchdb-email-aws-parse"
 	"github.com/igorrendulic/couchdb-experiment/email/mime"
-	"github.com/igorrendulic/couchdb-experiment/email/mime/parser"
 	w3kitgonic "github.com/mailio/go-web3-kit/gingonic"
+	"github.com/yuin/goldmark/parser"
 )
 
 type ApiSmtp struct {
